@@ -68,7 +68,8 @@ namespace ImageGallery.Client
                 //CallbackPath = new PathString("..."),
                 SignInScheme = "Cookies",
                 SaveTokens = true,
-                ClientSecret = "secret"
+                ClientSecret = "secret",
+                GetClaimsFromUserInfoEndpoint = true
             });
 
             app.UseStaticFiles();
