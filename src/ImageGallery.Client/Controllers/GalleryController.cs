@@ -169,6 +169,11 @@ namespace ImageGallery.Client.Controllers
             throw new Exception($"A problem happened while calling the API: {response.ReasonPhrase}");
         }
 
+        public async Task Logout()
+        {
+            await HttpContext.Authentication.SignOutAsync("Cookies");
+        }
+
         public async Task WriteOutIdentityInformation()
         {
             // get the saved identity token
