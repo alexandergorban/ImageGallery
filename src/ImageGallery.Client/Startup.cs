@@ -71,7 +71,7 @@ namespace ImageGallery.Client
                 Authority = "https://localhost:44382/",
                 RequireHttpsMetadata = true,
                 ClientId = "imagegalleryclient",
-                Scope = { "openid", "profile" },
+                Scope = { "openid", "profile", "address" },
                 ResponseType = "code id_token",
                 //CallbackPath = new PathString("..."),
                 //SignedOutCallbackPath = new PathString(""),
@@ -100,6 +100,7 @@ namespace ImageGallery.Client
 
                     OnUserInformationReceived = userInformationReceivedContext =>
                     {
+                        userInformationReceivedContext.User.Remove("address");
                         return Task.FromResult(0);
                     }
                 }
