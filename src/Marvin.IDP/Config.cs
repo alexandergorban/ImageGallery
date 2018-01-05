@@ -73,6 +73,10 @@ namespace Marvin.IDP
                     {
                         new Secret("secret".Sha256())
                     },
+                    PostLogoutRedirectUris =
+                    {
+                        "https://localhost:44336/signout-callback-oidc"
+                    }
                     //AlwaysIncludeUserClaimsInIdToken = true
                 }
             };
