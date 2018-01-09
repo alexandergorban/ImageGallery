@@ -60,7 +60,8 @@ namespace ImageGallery.Client
 
             app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
-                AuthenticationScheme = "Cookies"
+                AuthenticationScheme = "Cookies",
+                AccessDeniedPath = "/Authorization/AccessDenied"
             });
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
