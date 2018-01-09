@@ -64,6 +64,7 @@ namespace ImageGallery.API.Controllers
         }
 
         [HttpPost()]
+        [Authorize(Roles = "PayingUser")]
         public IActionResult CreateImage([FromBody] ImageForCreation imageForCreation)
         {
             if (imageForCreation == null)
@@ -99,6 +100,10 @@ namespace ImageGallery.API.Controllers
             // fill out the filename
             imageEntity.FileName = fileName;
 
+            // set the ownerId on the imageEntity
+            var ownerId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
+            imageEntity.OwnerId = ownerId;
+            
             // add and save.  
             _galleryRepository.AddImage(imageEntity);
 
