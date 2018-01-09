@@ -17,7 +17,12 @@ namespace ImageGallery.API.Services
         {
             return _context.Images.Any(i => i.Id == id);
         }
-        
+
+        public bool IsImageOwner(Guid id, string ownerId)
+        {
+            return _context.Images.Any(i => i.Id == id && i.OwnerId == ownerId);
+        }
+
         public Image GetImage(Guid id)
         {
             return _context.Images.FirstOrDefault(i => i.Id == id);
