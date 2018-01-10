@@ -86,7 +86,7 @@ namespace ImageGallery.Client
                 Authority = "https://localhost:44382/",
                 RequireHttpsMetadata = true,
                 ClientId = "imagegalleryclient",
-                Scope = { "openid", "profile", "address", "roles", "imagegalleryapi", "subscriptionlevel", "country" },
+                Scope = { "openid", "profile", "address", "roles", "imagegalleryapi", "subscriptionlevel", "country", "offline_access" },
                 ResponseType = "code id_token",
                 //CallbackPath = new PathString("..."),
                 //SignedOutCallbackPath = new PathString(""),
