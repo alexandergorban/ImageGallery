@@ -6,7 +6,7 @@ using IdentityServer4.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
-namespace IdentityServer4.Quickstart.UI
+namespace Marvin.IDP.Controllers.Home
 {
     [SecurityHeaders]
     public class HomeController : Controller

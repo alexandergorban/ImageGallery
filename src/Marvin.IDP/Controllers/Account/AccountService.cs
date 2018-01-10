@@ -12,7 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System;
 
-namespace IdentityServer4.Quickstart.UI
+namespace Marvin.IDP.Controllers.Account
 {
     public class AccountService
     {

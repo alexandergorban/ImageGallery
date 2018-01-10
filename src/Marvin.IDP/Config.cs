@@ -86,6 +86,7 @@ namespace Marvin.IDP
 
                     AccessTokenType = AccessTokenType.Reference,
 
+                    RequireConsent = false,
                     //IdentityTokenLifetime = 300,
                     //AuthorizationCodeLifetime = 300,
                     AccessTokenLifetime = 120,

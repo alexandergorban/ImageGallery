@@ -10,7 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 
-namespace IdentityServer4.Quickstart.UI
+namespace Marvin.IDP.Controllers.Grants
 {
     /// <summary>
     /// This sample controller allows a user to revoke grants given to clients

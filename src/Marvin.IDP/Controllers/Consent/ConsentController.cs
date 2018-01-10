@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace IdentityServer4.Quickstart.UI
+namespace Marvin.IDP.Controllers.Consent
 {
     /// <summary>
     /// This controller processes the consent UI
