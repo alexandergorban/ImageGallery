@@ -80,30 +80,52 @@ namespace Marvin.IDP.Controllers.Account
 
                 if (_marvinUserRepository.AreUserCredentialsValid(model.Username, model.Password))
                 {
-                    AuthenticationProperties props = null;
-                    // only set explicit expiration here if persistent. 
-                    // otherwise we reply upon expiration configured in cookie middleware.
-                    if (AccountOptions.AllowRememberLogin && model.RememberLogin)
-                    {
-                        props = new AuthenticationProperties
-                        {
-                            IsPersistent = true,
-                            ExpiresUtc = DateTimeOffset.UtcNow.Add(AccountOptions.RememberMeLoginDuration)
-                        };
-                    };
-
-                    // issue authentication cookie with subject ID and username
                     var user = _marvinUserRepository.GetUserByUsername(model.Username);
-                    await _events.RaiseAsync(new UserLoginSuccessEvent(user.Username, user.SubjectId, user.Username));
-                    await HttpContext.Authentication.SignInAsync(user.SubjectId, user.Username, props);
 
-                    // make sure the returnUrl is still valid, and if yes - redirect back to authorize endpoint or a local page
+                    var id = new ClaimsIdentity();
+                    id.AddClaim(new Claim(JwtClaimTypes.Subject, user.SubjectId));
+
+                    await HttpContext.Authentication.SignInAsync("idsrv.2FA", new ClaimsPrincipal(id));
+
+                    // sent code to user
+                    var redirectToAdditionalFactorUrl = Url.Action("AdditionalAuthenticationFactor", 
+                        new
+                        {
+                            returnUrl = model.ReturnUrl,
+                            rememberLogin = model.RememberLogin
+                        });
+
                     if (_interaction.IsValidReturnUrl(model.ReturnUrl) || Url.IsLocalUrl(model.ReturnUrl))
                     {
-                        return Redirect(model.ReturnUrl);
+                        return Redirect(redirectToAdditionalFactorUrl);
                     }
 
                     return Redirect("~/");
+
+                    //                    AuthenticationProperties props = null;
+                    //                    // only set explicit expiration here if persistent. 
+                    //                    // otherwise we reply upon expiration configured in cookie middleware.
+                    //                    if (AccountOptions.AllowRememberLogin && model.RememberLogin)
+                    //                    {
+                    //                        props = new AuthenticationProperties
+                    //                        {
+                    //                            IsPersistent = true,
+                    //                            ExpiresUtc = DateTimeOffset.UtcNow.Add(AccountOptions.RememberMeLoginDuration)
+                    //                        };
+                    //                    };
+                    //
+                    //                    // issue authentication cookie with subject ID and username
+                    //                    var user = _marvinUserRepository.GetUserByUsername(model.Username);
+                    //                    await _events.RaiseAsync(new UserLoginSuccessEvent(user.Username, user.SubjectId, user.Username));
+                    //                    await HttpContext.Authentication.SignInAsync(user.SubjectId, user.Username, props);
+                    //
+                    //                    // make sure the returnUrl is still valid, and if yes - redirect back to authorize endpoint or a local page
+                    //                    if (_interaction.IsValidReturnUrl(model.ReturnUrl) || Url.IsLocalUrl(model.ReturnUrl))
+                    //                    {
+                    //                        return Redirect(model.ReturnUrl);
+                    //                    }
+                    //
+                    //                    return Redirect("~/");
                 }
 
                 await _events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials"));
@@ -114,6 +136,70 @@ namespace Marvin.IDP.Controllers.Account
             // something went wrong, show form with error
             var vm = await _account.BuildLoginViewModelAsync(model);
             return View(vm);
+        }
+
+        [HttpGet]
+        public IActionResult AdditionalAuthenticationFactor(string returnUrl, bool rememberLogin)
+        {
+            // create VM
+            var vm = new AdditionalAuthenticationFactorViewModel()
+            {
+                RememberLogin = rememberLogin,
+                ReturnUrl = returnUrl
+            };
+
+            return View(vm);
+        }
+
+        public async Task<IActionResult> AdditionalAuthenticationFactor(AdditionalAuthenticationFactorViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                // read identity from the temporary cookie
+                var info = await HttpContext.Authentication.GetAuthenticateInfoAsync("idsrv.2FA");
+                var tempUser = info?.Principal;
+                if (tempUser == null)
+                {
+                    throw new Exception("2FA error");
+                }
+
+                var user = _marvinUserRepository.GetUserBySubjectId(tempUser.GetSubjectId());
+
+                // check code for user
+                if (model.Code != "123")
+                {
+                    ModelState.AddModelError("code", "2FA code is invalid");
+                    return View(model);
+                }
+
+                // login the user
+                AuthenticationProperties props = null;
+                if (AccountOptions.AllowRememberLogin && model.RememberLogin)
+                {
+                    props = new AuthenticationProperties
+                    {
+                        IsPersistent = true,
+                        ExpiresUtc = DateTimeOffset.UtcNow.Add(AccountOptions.RememberMeLoginDuration)
+                    };
+                }
+
+                // issue authentication cookie for user
+                await _events.RaiseAsync(new UserLoginSuccessEvent(user.Username, user.SubjectId, user.Username));
+                await HttpContext.Authentication.SignInAsync(user.SubjectId, user.Username, props);
+
+                // delete temporary cookie used for 2FA
+                await HttpContext.Authentication.SignOutAsync("idsrv.2FA");
+
+                if (_interaction.IsValidReturnUrl(model.ReturnUrl) || Url.IsLocalUrl(model.ReturnUrl))
+                {
+                    return Redirect(model.ReturnUrl);
+                }
+
+                return Redirect("~/");
+            }
+
+            // something went wrong, show an error
+            return View(model);
         }
 
         /// <summary>
