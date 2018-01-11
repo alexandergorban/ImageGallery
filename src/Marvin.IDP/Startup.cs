@@ -73,6 +73,9 @@ namespace Marvin.IDP
                 .AddMarvinUserStore()
                 .AddConfigurationStore(builder => 
                     builder.UseSqlServer(identityServerDataDBConnectionString,
+                        options => options.MigrationsAssembly(migrationsAssembly)))
+                .AddOperationalStore(builder =>
+                    builder.UseSqlServer(identityServerDataDBConnectionString,
                         options => options.MigrationsAssembly(migrationsAssembly)));
             //.AddInMemoryIdentityResources(Config.GetIdentityResources())
             //.AddInMemoryApiResources(Config.GetApiResources())
@@ -81,7 +84,7 @@ namespace Marvin.IDP
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, 
-            MarvinUserContext marvinUserContext, ConfigurationDbContext configurationDbContext)
+            MarvinUserContext marvinUserContext, ConfigurationDbContext configurationDbContext, PersistedGrantDbContext persistedGrantDbContext)
         {
             loggerFactory.AddConsole();
             loggerFactory.AddDebug();
@@ -93,6 +96,8 @@ namespace Marvin.IDP
 
             configurationDbContext.Database.Migrate();
             configurationDbContext.EnsureSeedDataForContext();
+
+            persistedGrantDbContext.Database.Migrate();
 
             marvinUserContext.Database.Migrate();
             marvinUserContext.EnsureSeedDataForContext();
