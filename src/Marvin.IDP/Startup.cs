@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using IdentityServer4;
 using Marvin.IDP.Entities;
@@ -29,6 +30,24 @@ namespace Marvin.IDP
             Configuration = builder.Build();
         }
 
+        public X509Certificate2 LoadCertificateFromStore()
+        {
+            // create cert: New-SelfSignedCertificate -Type Custom -Subject "CN=MarvinIdSrvSigningCert" -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3","2.5.29.17={text}upn=gorban.alexander.y@gmail.com") -KeyUsage DigitalSignature -KeyAlgorithm ECDSA_nistP256 -CurveExport CurveName -CertStoreLocation "Cert:\LocalMachine\My"
+            string thumbPrint = "617ACCA694AD3F1E2485008951183B93C1DBE9D5";
+
+            using (var store = new X509Store(StoreName.My, StoreLocation.LocalMachine))
+            {
+                store.Open(OpenFlags.ReadOnly);
+                var certCollection = store.Certificates.Find(X509FindType.FindByThumbprint,
+                    thumbPrint, true);
+                if (certCollection.Count == 0)
+                {
+                    throw new Exception("The specified certificate wasn't found.");
+                }
+                return certCollection[0];
+            }
+        }
+
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
@@ -43,6 +62,7 @@ namespace Marvin.IDP
 
             services.AddIdentityServer()
                 .AddDeveloperSigningCredential()
+                //.AddSigningCredential(LoadCertificateFromStore())
                 .AddMarvinUserStore()
                 .AddInMemoryIdentityResources(Config.GetIdentityResources())
                 .AddInMemoryApiResources(Config.GetApiResources())
