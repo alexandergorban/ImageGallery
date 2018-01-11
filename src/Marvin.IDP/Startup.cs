@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IdentityServer4;
 using Marvin.IDP.Entities;
 using Marvin.IDP.Services;
 using Microsoft.AspNetCore.Builder;
@@ -63,6 +64,15 @@ namespace Marvin.IDP
             marvinUserContext.EnsureSeedDataForContext();
 
             app.UseIdentityServer();
+
+            app.UseFacebookAuthentication(new FacebookOptions
+            {
+                AuthenticationScheme = "Facebook",
+                DisplayName = "Facebook",
+                SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme,
+                AppId = "360523537749399",
+                AppSecret = "031ea1979c8a71fd182eddf69db5ee32"
+            });
 
             app.UseStaticFiles();
 
