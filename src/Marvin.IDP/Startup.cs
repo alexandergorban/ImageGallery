@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using IdentityServer4;
+using IdentityServer4.EntityFramework.DbContexts;
 using Marvin.IDP.Entities;
 using Marvin.IDP.Services;
 using Microsoft.AspNetCore.Builder;
@@ -58,19 +60,28 @@ namespace Marvin.IDP
 
             services.AddScoped<IMarvinUserRepository, MarvinUserRepository>();
 
+            var identityServerDataDBConnectionString =
+                Configuration["connectionStrings:identityServerDataDBConnectionString"];
+
+            var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+
             services.AddMvc();
 
             services.AddIdentityServer()
                 .AddDeveloperSigningCredential()
                 //.AddSigningCredential(LoadCertificateFromStore())
                 .AddMarvinUserStore()
-                .AddInMemoryIdentityResources(Config.GetIdentityResources())
-                .AddInMemoryApiResources(Config.GetApiResources())
-                .AddInMemoryClients(Config.GetClients());
+                .AddConfigurationStore(builder => 
+                    builder.UseSqlServer(identityServerDataDBConnectionString,
+                        options => options.MigrationsAssembly(migrationsAssembly)));
+            //.AddInMemoryIdentityResources(Config.GetIdentityResources())
+            //.AddInMemoryApiResources(Config.GetApiResources())
+            //.AddInMemoryClients(Config.GetClients());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, MarvinUserContext marvinUserContext)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, 
+            MarvinUserContext marvinUserContext, ConfigurationDbContext configurationDbContext)
         {
             loggerFactory.AddConsole();
             loggerFactory.AddDebug();
@@ -79,6 +90,9 @@ namespace Marvin.IDP
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            configurationDbContext.Database.Migrate();
+            configurationDbContext.EnsureSeedDataForContext();
 
             marvinUserContext.Database.Migrate();
             marvinUserContext.EnsureSeedDataForContext();
